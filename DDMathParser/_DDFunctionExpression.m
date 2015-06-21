@@ -74,18 +74,64 @@
 - (DDExpression *)simplifiedExpressionWithEvaluator:(DDMathEvaluator *)evaluator error:(NSError **)error {
 	BOOL canSimplify = YES;
     
+    //TODO:
+    DDExpression *f = self.arguments[0];
+    DDExpression *s = self.arguments[1];
+    if ([self.function isEqualToString:DDOperatorMultiply]) {
+        //simplified 0*x && 1*x
+        if (f.expressionType == DDExpressionTypeNumber && [[f number] intValue] == 0) {
+            return [DDExpression numberExpressionWithNumber:@0];
+        }
+        
+        if (s.expressionType == DDExpressionTypeNumber && [[s number] intValue] == 0) {
+            return [DDExpression numberExpressionWithNumber:@0];
+        }
+        
+        if (f.expressionType == DDExpressionTypeNumber && [[f number] intValue] == 1) {
+            return [s simplifiedExpressionWithEvaluator:evaluator error:error];
+        }
+        
+        if (s.expressionType == DDExpressionTypeNumber && [[s number] intValue] == 1) {
+            return [f simplifiedExpressionWithEvaluator:evaluator error:error];
+        }
+    }else if ([self.function isEqualToString:DDOperatorAdd]) {
+        if (f.expressionType == DDExpressionTypeNumber && [[f number] intValue] == 0) {
+            return [s simplifiedExpressionWithEvaluator:evaluator error:error];
+        }
+        
+        if (s.expressionType == DDExpressionTypeNumber && [[s number] intValue] == 0) {
+            return [f simplifiedExpressionWithEvaluator:evaluator error:error];
+        }
+    }else if ([self.function isEqualToString:DDOperatorMinus]) {
+        if (s.expressionType == DDExpressionTypeNumber && [[s number] intValue] == 0) {
+            return [f simplifiedExpressionWithEvaluator:evaluator error:error];
+        }
+    }else if ([self.function isEqualToString:DDOperatorDivide]) {
+        if (f.expressionType == DDExpressionTypeNumber && [[f number] intValue] == 0) {
+            return [DDExpression numberExpressionWithNumber:@0];
+        }
+    }
+    
+    BOOL shouldResimplify = NO;
     NSMutableArray *newSubexpressions = [NSMutableArray array];
 	for (DDExpression * e in [self arguments]) {
 		DDExpression * a = [e simplifiedExpressionWithEvaluator:evaluator error:error];
+        if (e.expressionType != DDExpressionTypeNumber && a.expressionType == DDExpressionTypeNumber) {
+            shouldResimplify = YES;
+        }
 		if (!a) { return nil; }
         canSimplify &= [a expressionType] == DDExpressionTypeNumber;
         [newSubexpressions addObject:a];
 	}
 	
+    DDExpression *simpleFunc = [DDExpression functionExpressionWithFunction:[self function] arguments:newSubexpressions error:error];
+    if (shouldResimplify) {
+        simpleFunc = [simpleFunc simplifiedExpressionWithEvaluator:evaluator error:nil];
+    }
 	if (canSimplify) {
 		if (evaluator == nil) { evaluator = [DDMathEvaluator defaultMathEvaluator]; }
 		
-        id result = [evaluator evaluateExpression:self withSubstitutions:nil error:error];
+        id result = [evaluator evaluateExpression:simpleFunc withSubstitutions:nil error:error];
 		
 		if ([result isKindOfClass:[_DDNumberExpression class]]) {
 			return result;
@@ -94,7 +140,7 @@
 		}		
 	}
 	
-	return [DDExpression functionExpressionWithFunction:[self function] arguments:newSubexpressions error:error];
+    return simpleFunc;
 }
 
 - (NSString *)description {

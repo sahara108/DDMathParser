@@ -108,7 +108,12 @@
         [parameters addObject:parameter];
     }
     
-    return [DDExpression functionExpressionWithFunction:_functionName arguments:parameters error:error];
+    //TODO: a function should contain variable, so check here if the parameters == 0, return variable
+    if ([parameters count] == 0) {
+        return [DDExpression variableExpressionWithVariable:self.functionName];
+    }else {
+        return [DDExpression functionExpressionWithFunction:_functionName arguments:parameters error:error];
+    }
 }
 
 @end
