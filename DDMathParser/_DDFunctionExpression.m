@@ -110,6 +110,13 @@
         if (f.expressionType == DDExpressionTypeNumber && [[f number] intValue] == 0) {
             return [DDExpression numberExpressionWithNumber:@0];
         }
+    }else if ([self.function isEqualToString:DDOperatorPower]) {
+        if (s.expressionType == DDExpressionTypeNumber && [[s number] intValue] == 1) {
+            return f;
+        }
+        if (s.expressionType == DDExpressionTypeNumber && [[s number] intValue] == 0) {
+            return [DDExpression numberExpressionWithNumber:@(1)];
+        }
     }
     
     BOOL shouldResimplify = NO;
