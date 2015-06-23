@@ -13,6 +13,11 @@
 @interface DDMathStringTokenizer : NSEnumerator
 
 @property (readonly) DDMathOperatorSet *operatorSet;
+/*!
+ *  Enable to auto detect variable. Disable will make weird character as function
+ *  Default is YES
+ */
+@property (nonatomic) BOOL weirdCharAsVar;
 
 - (instancetype)initWithString:(NSString *)expressionString operatorSet:(DDMathOperatorSet *)operatorSet error:(NSError **)error;
 

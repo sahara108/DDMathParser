@@ -72,6 +72,7 @@
 	ERR_ASSERT(error);
     self = [super init];
     if (self) {
+        _weirdCharAsVar = YES;
         _operatorSet = operatorSet;
         if (_operatorSet == nil) {
             _operatorSet = [DDMathOperatorSet defaultOperatorSet];
@@ -451,7 +452,12 @@
     
     if (length > 0) {
         NSString *rawToken = [NSString stringWithCharacters:(_characters+start) length:length];
-        return [DDMathStringToken mathStringTokenWithToken:rawToken type:DDTokenTypeFunction];
+        //TODO: found rawToken in list 
+        if (self.weirdCharAsVar) {
+            return [DDMathStringToken mathStringTokenWithToken:rawToken type:DDTokenTypeVariable];
+        }else {
+            return [DDMathStringToken mathStringTokenWithToken:rawToken type:DDTokenTypeFunction];
+        }
     }
     
     _characterIndex = start;
